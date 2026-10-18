@@ -1,0 +1,115 @@
+{
+  "name": "Scuba Analyzer - Email (results + comparison reports)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "genai-assess-email",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "c1c2c3c4-0001-4000-8000-000000000001",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        240,
+        300
+      ],
+      "webhookId": "genai-assess-email"
+    },
+    {
+      "parameters": {
+        "jsCode": "// BUILD EMAIL  (the code inside the \"Build Email\" node of the n8n workflow)\n//\n// The Flask backend sends two kinds of email. This code builds the subject, the HTML and the PDF\n// attachments for both:\n//   type \"comparison\" -> AI marks + admin marks + the PDF reports\n//   type \"result\"     -> the student's own AI result (+ the AI report PDF)\n//\n// Layout of this file: 1 helpers, 2 colours, 3 feedback text -> HTML, 4 small HTML pieces,\n//                      5 one email per item, 6 attach the PDFs.\n// Email HTML uses plain tables and inline styles on purpose: Gmail and Outlook only support that.\n\n\n// ── 1. Small helpers ────────────────────────────────────────────\n// esc() makes text safe to put inside HTML.\nconst esc = v => String(v ?? '').replace(/[&<>\"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[c]));\n// num() turns a value into a number (or null). fmt() shows it tidily: 7.50 -> \"7.5\".\nconst num = v => { const n = parseFloat(v); return Number.isFinite(n) ? n : null; };\nconst fmt = v => { const n = num(v); return n === null ? '-' : String(Math.round(n * 10) / 10); };\n\n\n// ── 2. Colours and fonts (same as the web app) ──────────────────\nconst C = { ink: '#2B1B17', plum: '#5C3A41', peach: '#ECA087', peachInk: '#9A4A32', sand: '#F4F0EA', sunk: '#EAE3D9',\n            line: '#DDD3C6', muted: '#766760', body: '#3A2B26', good: '#4A6B3A', mid: '#9A5B12', bad: '#A32A2A' };\nconst SANS = \"'IBM Plex Sans','Segoe UI',Helvetica,Arial,sans-serif\";\nconst MONO = \"'IBM Plex Mono',Consolas,'Courier New',monospace\";\n\n// A score is green from 7, amber from 5, red below 5.\nconst scoreColor = v => { const n = num(v); return n === null ? C.muted : n >= 7 ? C.good : n >= 5 ? C.mid : C.bad; };\nconst scoreWord = v => { const n = num(v); return n === null ? '' : n >= 9 ? 'Excellent' : n >= 7 ? 'Good' : n >= 5 ? 'Average' : 'Needs work'; };\n// How far apart the AI and the admin are (the difference is admin minus AI).\nconst agreementWord = d => { const n = Math.abs(num(d) ?? 99); return n === 99 ? '' : n <= 1 ? 'Close agreement' : n <= 2 ? 'Moderate difference' : 'Significant difference'; };\n\n\n// ── 3. Feedback text -> HTML ────────────────────────────────────\n// The AI feedback is plain text like this:\n//     Summary\n//     Two sentences.\n//\n//     Semantic (meaning & coherence)\n//     - Strength: ...\n//     - To improve: ...\n// Section titles become bold headings, \"- \" lines become bullets, and \"Label:\" becomes bold.\n// Leftover Markdown (**bold**, # headings, \"* \" bullets) from older records is cleaned up too.\nconst TITLES = ['Summary', 'Semantic', 'Stylistic', 'Pragmatic', 'Overall rating'];\n\nfunction feedbackHtml(text) {\n  let html = '';\n  let bullets = '';\n  const endList = () => {\n    if (bullets) html += `<ul style=\"margin:4px 0 10px;padding-left:20px\">${bullets}</ul>`;\n    bullets = '';\n  };\n  const boldLabel = s => esc(s).replace(/^([A-Z][A-Za-z ]{2,24}):\\s/, '<b>$1:</b> ');\n\n  for (let line of String(text || '-').split('\\n')) {\n    line = line.replace(/\\*\\*/g, '').replace(/^#+\\s*/, '').replace(/^\\*\\s+/, '- ').trim();\n\n    if (line.startsWith('- ')) {                       // a bullet\n      bullets += `<li style=\"padding:2px 0\">${boldLabel(line.slice(2))}</li>`;\n      continue;\n    }\n    endList();\n    if (!line) continue;                               // a blank line\n    const isTitle = TITLES.some(t => line.startsWith(t)) && !/[:.]/.test(line);\n    html += isTitle\n      ? `<div style=\"font:600 14px/1.4 ${SANS};color:${C.plum};padding:12px 0 2px\">${esc(line)}</div>`\n      : `<div style=\"padding:2px 0 6px\">${boldLabel(line)}</div>`;\n  }\n  endList();\n  return html;\n}\n\n\n// ── 4. Small HTML pieces (each one is a table row, or a bit of one) ──\nconst table = (inner, style = '') =>\n  `<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse;${style}\">${inner}</table>`;\n\n// A section title, and a block of text under it.\nconst heading = text =>\n  `<tr><td style=\"padding:26px 32px 6px;font:600 15px/1.3 ${SANS};color:${C.ink}\">${esc(text)}</td></tr>`;\nconst textBlock = html =>\n  `<tr><td style=\"padding:0 32px;font:400 14.5px/1.65 ${SANS};color:${C.body}\">${html}</td></tr>`;\nconst plainText = text => textBlock(esc(text || '-').replace(/\\n/g, '<br>'));\nconst feedbackBlock = text => textBlock(feedbackHtml(text));\n\n// A coloured score bar (0 to 10) made of two table cells.\nconst bar = (value, color) => {\n  const pct = Math.max(0, Math.min(100, Math.round((num(value) || 0) * 10)));\n  const filled = pct ? `<td width=\"${pct}%\" height=\"8\" bgcolor=\"${color}\" style=\"font-size:0;line-height:0\">&nbsp;</td>` : '';\n  const empty = pct < 100 ? `<td height=\"8\" bgcolor=\"${C.sunk}\" style=\"font-size:0;line-height:0\">&nbsp;</td>` : '';\n  return table(`<tr>${filled}${empty}</tr>`);\n};\n\n// A highlighted warning with a coloured stripe on the left.\nconst notice = (html, color) =>\n  `<tr><td style=\"padding:16px 32px 0\">` + table(`<tr>\n     <td width=\"3\" bgcolor=\"${color}\" style=\"font-size:0\">&nbsp;</td>\n     <td style=\"padding:10px 14px;background:${C.sand};font:400 13.5px/1.55 ${SANS};color:${C.body}\">${html}</td>\n   </tr>`) + `</td></tr>`;\n\n// One box in the row of scores (label, big number, small caption).\nconst scoreCell = (label, value, caption, color, isLast) => `\n  <td align=\"center\" valign=\"top\" style=\"padding:16px 8px;${isLast ? '' : `border-right:1px solid ${C.line};`}\">\n    <div style=\"font:400 12.5px/1.3 ${SANS};color:${C.muted}\">${esc(label)}</div>\n    <div style=\"font:500 30px/1.25 ${MONO};color:${color};padding-top:4px\">${value}</div>\n    <div style=\"font:400 12.5px/1.3 ${SANS};color:${C.muted};padding-top:2px\">${esc(caption)}</div>\n  </td>`;\n\n// \"Domain  General\" and \"Topic  ...\" lines under the greeting.\nconst detailRow = (name, value) => `<tr>\n  <td width=\"70\" valign=\"top\" style=\"padding:3px 0;font:400 13px/1.5 ${SANS};color:${C.muted}\">${name}</td>\n  <td style=\"padding:3px 0;font:500 14px/1.5 ${SANS};color:${C.ink}\">${esc(value || '-')}</td></tr>`;\n\n// A bordered panel around the scores.\nconst scorePanel = inner =>\n  `<tr><td style=\"padding:20px 32px 0\">${table(`<tr>${inner}</tr>`, `border:1px solid ${C.line}`)}</td></tr>`;\n\n\n// ── 5. Build one email for each item n8n receives ───────────────\nconst out = [];\n\nfor (const item of $input.all()) {\n  const b = item.json.body || item.json;            // the data sent by the Flask backend\n  const isComparison = b.type === 'comparison';\n  const firstName = String(b.name || '').trim().split(/\\s+/)[0] || 'there';\n\n  // Names of the attached PDFs, for the \"Attached:\" line (\"comparison_report.pdf\" -> \"Comparison report\").\n  const files = (b.attachments || [])\n    .map(a => String(a.filename || '').replace(/\\.pdf$/i, '').replace(/[_-]+/g, ' ').trim())\n    .filter(Boolean)\n    .map(name => name.charAt(0).toUpperCase() + name.slice(1).toLowerCase().replace(/\\bai\\b/g, 'AI'));\n\n  // Warnings (only when there is something to warn about).\n  let warnings = '';\n  if (b.irrelevant) warnings += notice('<b>Off-topic essay.</b> The essay did not address the assigned topic, so the AI scored it 0.', C.bad);\n  if (b.ai_generated?.detected) warnings += notice(`<b>AI-generated text flagged.</b> The detector estimates a ${esc(b.ai_generated.confidence)}% likelihood that this text was AI-generated.`, C.mid);\n\n  // The parts that differ between the two kinds of email.\n  let subject, preview, intro, scores, feedback;\n\n  if (isComparison) {\n    const diff = num(b.difference);\n    subject = `Your essay review is ready: AI ${fmt(b.ai_marks)}/10, admin ${fmt(b.admin_marks)}/10`;\n    preview = 'The admin has scored your essay. Reports are attached.';\n    intro = 'An admin has reviewed your essay. ' + (files.length ? `The ${files.length > 1 ? 'reports are' : 'report is'} attached as PDF.` : '');\n    scores = scorePanel(\n      scoreCell('AI score', esc(fmt(b.ai_marks)), scoreWord(b.ai_marks), C.peachInk, false) +\n      scoreCell('Admin score', esc(fmt(b.admin_marks)), scoreWord(b.admin_marks), C.plum, false) +\n      scoreCell('Difference', diff === null ? '-' : (diff > 0 ? '+' : '') + esc(fmt(diff)), agreementWord(diff), C.ink, true));\n    feedback = heading('AI feedback') + feedbackBlock(b.overall_feedback) +\n               heading('Admin feedback') + plainText(b.admin_feedback);\n  } else {\n    const dimensions = [['Semantic', b.semantic?.score], ['Stylistic', b.stylistic?.score], ['Pragmatic', b.pragmatic?.score]];\n    const barRows = dimensions.map(([name, score]) => `<tr>\n        <td width=\"90\" style=\"padding:7px 0;font:500 14px/1.3 ${SANS};color:${C.ink}\">${name}</td>\n        <td style=\"padding:7px 0\">${bar(score, C.plum)}</td>\n        <td width=\"48\" align=\"right\" style=\"padding:7px 0;font:500 13.5px/1.3 ${MONO};color:${scoreColor(score)}\">${esc(fmt(score))}</td>\n      </tr>`).join('');\n    subject = `Your essay result: ${fmt(b.avg_score)}/10`;\n    preview = 'Your AI evaluation is ready.';\n    intro = 'Your essay has been evaluated by the AI. ' + (files.length ? 'The full report is attached as PDF.' : '');\n    scores = scorePanel(`\n      <td width=\"150\" align=\"center\" valign=\"middle\" style=\"padding:18px 8px;border-right:1px solid ${C.line}\">\n        <div style=\"font:400 12.5px/1.3 ${SANS};color:${C.muted}\">Overall score</div>\n        <div style=\"font:500 36px/1.2 ${MONO};color:${scoreColor(b.avg_score)};padding-top:4px\">${esc(fmt(b.avg_score))}</div>\n        <div style=\"font:400 12.5px/1.3 ${SANS};color:${C.muted}\">out of 10 (${esc(scoreWord(b.avg_score))})</div>\n      </td>\n      <td style=\"padding:12px 18px\">${table(barRows)}</td>`);\n    feedback = heading('Overall feedback') + feedbackBlock(b.overall_feedback);\n  }\n\n  // The whole email page: header, greeting, details, scores, warnings, feedback, footer.\n  const html = `<!DOCTYPE html><html><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>${esc(subject)}</title></head>\n<body style=\"margin:0;padding:0;background:${C.sand}\">\n<div style=\"display:none;max-height:0;overflow:hidden;opacity:0;color:${C.sand}\">${esc(preview)}</div>\n<table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:${C.sand}\"><tr><td align=\"center\" style=\"padding:28px 12px\">\n\n  <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px;border-collapse:collapse;background:#ffffff;border:1px solid ${C.line}\">\n    <tr><td style=\"background:${C.ink};padding:20px 32px;border-bottom:3px solid ${C.peach}\">\n      <table role=\"presentation\" width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr>\n        <td style=\"font:600 14px/1 ${SANS};letter-spacing:2.5px;color:${C.sand}\">SCUBA ANALYZER</td>\n        <td align=\"right\" style=\"font:400 13px/1 ${SANS};color:#C6B4A8\">${isComparison ? 'Essay review' : 'Essay result'}</td>\n      </tr></table>\n    </td></tr>\n    <tr><td style=\"padding:30px 32px 0;font:400 15px/1.6 ${SANS};color:${C.body}\">Hello ${esc(firstName)},<br><br>${esc(intro.trim())}</td></tr>\n    <tr><td style=\"padding:18px 32px 0\"><table role=\"presentation\" cellpadding=\"0\" cellspacing=\"0\" style=\"border-collapse:collapse\">${detailRow('Domain', b.domain)}${detailRow('Topic', b.topic)}</table></td></tr>\n    ${scores}\n    ${warnings}\n    ${feedback}\n    ${files.length ? `<tr><td style=\"padding:24px 32px 0;font:400 13px/1.6 ${SANS};color:${C.muted}\">Attached: ${files.map(esc).join('; ')}.</td></tr>` : ''}\n    <tr><td style=\"padding:28px 32px 30px;font:400 13px/1.6 ${SANS};color:${C.muted}\">Questions about your score? Contact your administrator.</td></tr>\n  </table>\n\n  <table role=\"presentation\" width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"width:100%;max-width:600px\"><tr>\n    <td align=\"center\" style=\"padding:16px 8px;font:400 12px/1.6 ${SANS};color:${C.muted}\">Sent by Scuba Analyzer because an essay was submitted with this email address.</td>\n  </tr></table>\n\n</td></tr></table>\n</body></html>`;\n\n  // ── 6. Attach the PDFs ──\n  // The backend sends each PDF as base64 text; n8n needs real files (\"binary data\").\n  const binary = {};\n  let index = 0;\n  for (const attachment of (b.attachments || [])) {\n    binary[`file${index}`] = await this.helpers.prepareBinaryData(\n      Buffer.from(attachment.base64, 'base64'), attachment.filename || `report${index}.pdf`, 'application/pdf');\n    index++;\n  }\n\n  out.push({ json: { to: b.to, subject, html, attachmentFields: Object.keys(binary).join(',') }, binary });\n}\n\nreturn out;\n"
+      },
+      "id": "c1c2c3c4-0002-4000-8000-000000000002",
+      "name": "Build Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "Scuba Analyzer <your-sender@example.com>",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "html",
+        "html": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false,
+          "attachments": "={{ $json.attachmentFields }}"
+        }
+      },
+      "id": "c1c2c3c4-0003-4000-8000-000000000003",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        680,
+        300
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "REPLACE_ME",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"status\": \"sent\" } }}",
+        "options": {}
+      },
+      "id": "c1c2c3c4-0004-4000-8000-000000000004",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        900,
+        300
+      ]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Build Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Email": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
