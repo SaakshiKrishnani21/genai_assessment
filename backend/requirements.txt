@@ -1,0 +1,13 @@
+flask
+flask-cors
+python-dotenv
+langgraph
+langchain-core
+langchain-groq
+pydantic
+fpdf2
+openpyxl
+requests
+google-auth
+
+gunicorn
