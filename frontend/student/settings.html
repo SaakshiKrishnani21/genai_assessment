@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Settings — Scuba Analyzer</title>
+  <link rel="icon" type="image/png" href="../assets/favicon-32.png"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <!-- Turns <i data-icon="..."></i> into line icons (see js/icons.js) -->
+  <script type="module" src="../js/icons.js"></script>
+</head>
+<body>
+<!-- Pop-up messages ("toasts") appear here; js/helpers.js adds them -->
+<div id="toast-container"></div>
+<!-- Dark layer behind the sidebar when it is open on a phone -->
+<div class="sidebar-overlay" id="sb-overlay"></div>
+
+<!-- PAGE LAYOUT: sidebar on the left, main area on the right -->
+<div class="app-layout">
+  <!-- SIDEBAR: logo, menu, and the signed-in person. Same on every page; js/sidebar.js fills in the name and role. -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><img src="../assets/logo-mark-light.png" alt=""></div>
+      <div class="logo-text">Scuba Analyzer</div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Student</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i data-icon="dashboard"></i></span> Dashboard</a>
+      <a class="nav-item" href="new_assessment.html"><span class="nav-icon"><i data-icon="pen-line"></i></span> New assessment</a>
+      <a class="nav-item" href="history.html"><span class="nav-icon"><i data-icon="history"></i></span> Past performance</a>
+      <a class="nav-item" href="feedback.html"><span class="nav-icon"><i data-icon="message"></i></span> Feedback</a>
+      <a class="nav-item active" href="settings.html"><span class="nav-icon"><i data-icon="settings"></i></span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">?</div>
+        <div><div class="user-name">Loading…</div><div class="user-role">Student</div></div>
+        <span class="logout-btn" title="Clear local data"><i data-icon="power"></i></span>
+      </div>
+      <a href="../index.html" class="switch-role"><i data-icon="repeat" class="ic-sm"></i> Switch role</a>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA: top bar, then the content of this page -->
+  <div class="main-content">
+    <!-- TOP BAR: menu button (phones only), page title, and actions for this page -->
+    <div class="topbar">
+      <button class="hamburger" id="hamburger-btn"><span></span><span></span><span></span></button>
+      <h2>Settings</h2>
+    </div>
+
+    <!-- PAGE CONTENT: everything specific to this page -->
+    <div class="page-content" style="max-width:720px">
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>Profile</h3>
+          <div class="settings-row">
+            <div class="settings-label">Display name<small>Shown across the dashboard and in your reports</small></div>
+            <input type="text" id="name-input" class="input-field" style="width:220px" placeholder="Your name"/>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Email<small>Your results and comparison report are sent here</small></div>
+            <input type="email" id="user-email-input" class="input-field" style="width:220px" placeholder="you@example.com"/>
+          </div>
+          <div class="settings-row" style="border-bottom:none">
+            <button class="btn btn-primary" id="save-name-btn">Save profile</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>New assessment Defaults</h3>
+          <div class="settings-row">
+            <div class="settings-label">Default domain<small>Pre-selected the next time you start a new assessment</small></div>
+            <select id="default-domain" class="input-field" style="width:220px">
+              <option value="">No default</option>
+            </select>
+          </div>
+          <div class="settings-row" style="border-bottom:none">
+            <div class="settings-label">Default difficulty<small>Used to pre-fill the difficulty selector</small></div>
+            <select id="default-difficulty" class="input-field" style="width:220px">
+              <option value="Easy">Easy</option>
+              <option value="Medium">Medium</option>
+              <option value="Hard">Hard</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>Notifications</h3>
+          <div class="settings-row" style="border-bottom:none">
+            <div class="settings-label">Score alerts<small>Flag it locally when a new assessment scores below 5/10</small></div>
+            <label class="toggle"><input type="checkbox" id="toggle-alerts"/><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>Data</h3>
+          <div class="settings-row" style="border-bottom:none">
+            <div class="settings-label">Local assessment history<small>Everything is stored only in this browser — nothing is uploaded</small></div>
+            <button class="btn btn-danger" id="clear-history-btn"><i data-icon="trash"></i> Clear all history</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module" src="settings.js?v=6"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Assessment review — Scuba Analyzer</title>
+  <link rel="icon" type="image/png" href="../assets/favicon-32.png"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <!-- Turns <i data-icon="..."></i> into line icons (see js/icons.js) -->
+  <script type="module" src="../js/icons.js"></script>
+  <link rel="stylesheet" href="review.css"/>
+</head>
+<body>
+<!-- Pop-up messages ("toasts") appear here; js/helpers.js adds them -->
+<div id="toast-container"></div>
+<!-- Dark layer behind the sidebar when it is open on a phone -->
+<div class="sidebar-overlay" id="sb-overlay"></div>
+
+<!-- PAGE LAYOUT: sidebar on the left, main area on the right -->
+<div class="app-layout">
+  <!-- SIDEBAR: logo, menu, and the signed-in person. Same on every page; js/sidebar.js fills in the name and role. -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><img src="../assets/logo-mark-light.png" alt=""></div>
+      <div class="logo-text">Scuba Analyzer</div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Admin</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i data-icon="dashboard"></i></span> Dashboard</a>
+      <a class="nav-item" href="participants.html"><span class="nav-icon"><i data-icon="graduation-cap"></i></span> Participants</a>
+      <a class="nav-item active" href="review.html"><span class="nav-icon"><i data-icon="clipboard-check"></i></span> Review center</a>
+      <a class="nav-item" href="feedback.html"><span class="nav-icon"><i data-icon="message"></i></span> Feedback</a>
+      <a class="nav-item" href="settings.html"><span class="nav-icon"><i data-icon="settings"></i></span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">?</div>
+        <div><div class="user-name">Loading…</div><div class="user-role">Admin</div></div>
+        <span class="logout-btn" title="Clear local data"><i data-icon="power"></i></span>
+      </div>
+      <a href="../index.html" class="switch-role"><i data-icon="repeat" class="ic-sm"></i> Switch role</a>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA: top bar, then the content of this page -->
+  <div class="main-content">
+    <!-- TOP BAR: menu button (phones only), page title, and actions for this page -->
+    <div class="topbar">
+      <button class="hamburger" id="hamburger-btn"><span></span><span></span><span></span></button>
+      <h2>Assessment review</h2>
+      <div class="topbar-right" style="display:flex;gap:8px">
+        <input type="text" id="search-input" class="input-field" placeholder="Search topic…" style="width:200px;padding:7px 12px;font-size:13px"/>
+        <select id="filter-domain" class="input-field" style="width:170px;padding:7px 12px;font-size:13px">
+          <option value="">All domains</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT: everything specific to this page -->
+    <div class="page-content">
+      <div style="display:grid;grid-template-columns:1fr 470px;gap:20px" id="layout-grid">
+        <div>
+          <div id="assessment-list" style="display:flex;flex-direction:column;gap:12px"></div>
+        </div>
+        <div>
+          <div id="detail-panel" class="card" style="position:sticky;top:80px;max-height:calc(100vh - 100px);overflow-y:auto">
+            <div class="empty-state">
+              <div class="empty-icon"><i data-icon="pointer"></i></div>
+              <h3>Select an assessment</h3>
+              <p>Review essays blind: AI scores stay hidden until you submit your own review.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="review.js?v=6"></script>
+</body>
+</html>

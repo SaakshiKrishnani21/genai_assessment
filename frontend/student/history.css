@@ -1,0 +1,8 @@
+.correction-card{background:var(--card2);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
+.correction-card .c-original{font-size:13px;color:var(--text);font-style:italic;margin-bottom:6px}
+.correction-card .c-row{display:flex;gap:6px;font-size:12.5px;line-height:1.6;margin-bottom:3px}
+.correction-card .c-row .c-tag{flex-shrink:0;font-weight:700;width:78px}
+.correction-card .c-expected .c-tag{color:var(--amber)}
+.correction-card .c-correction .c-tag{color:var(--peach-ink)}
+.correction-card .c-expected span:last-child{color:var(--text2)}
+.correction-card .c-correction span:last-child{color:var(--text);font-family:var(--font-mono);font-size:12.5px;background:var(--peach-dim);padding:0 4px;border-radius:3px}

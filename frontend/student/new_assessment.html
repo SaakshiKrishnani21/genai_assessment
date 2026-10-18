@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>New assessment — Scuba Analyzer</title>
+  <link rel="icon" type="image/png" href="../assets/favicon-32.png"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <!-- Turns <i data-icon="..."></i> into line icons (see js/icons.js) -->
+  <script type="module" src="../js/icons.js"></script>
+  <link rel="stylesheet" href="new_assessment.css"/>
+</head>
+<body>
+<!-- Pop-up messages ("toasts") appear here; js/helpers.js adds them -->
+<div id="toast-container"></div>
+
+<!-- Shown if the writer leaves full screen mid-assessment; writing is blocked until they return -->
+<div id="fs-lock" style="position:fixed;inset:0;z-index:9999;background:rgba(31,18,15,.96);color:#EADFD4;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;text-align:center;padding:24px">
+  <div style="font-size:40px;color:#fff"><i data-icon="lock"></i></div>
+  <h2 style="font-size:20px;color:#fff">Full screen is required</h2>
+  <p style="font-size:14px;color:#D8C8BB;max-width:380px">The assessment must stay in full screen. Your timer is still running — return to full screen to keep writing.</p>
+  <button class="btn btn-primary btn-lg" id="fs-return-btn">Return to full screen</button>
+</div>
+<!-- Shown for 15 s when the writer leaves the tab/window; if they are not back by 0 the test ends and is submitted -->
+<div id="away-overlay" style="position:fixed;inset:0;z-index:10000;background:rgba(60,18,12,.96);display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;text-align:center;padding:30px">
+  <div style="font-size:42px;color:#fff"><i data-icon="alert"></i></div>
+  <h2 style="font-size:22px;color:#fff">You left the test window</h2>
+  <div id="away-count" style="font:500 84px/1 var(--font-mono);color:#F2B6A8;font-variant-numeric:tabular-nums">15</div>
+  <p style="font-size:14px;color:#EBD3CC;max-width:420px;line-height:1.6">Come back now. When this reaches 0 the test ends and your essay is submitted exactly as written.</p>
+  <button class="btn btn-primary btn-lg" id="away-return-btn">Return to the test</button>
+</div>
+<!-- Dark layer behind the sidebar when it is open on a phone -->
+<div class="sidebar-overlay" id="sb-overlay"></div>
+
+<!-- PAGE LAYOUT: sidebar on the left, main area on the right -->
+<div class="app-layout">
+  <!-- SIDEBAR: logo, menu, and the signed-in person. Same on every page; js/sidebar.js fills in the name and role. -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><img src="../assets/logo-mark-light.png" alt=""></div>
+      <div class="logo-text">Scuba Analyzer</div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Student</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i data-icon="dashboard"></i></span> Dashboard</a>
+      <a class="nav-item active" href="new_assessment.html"><span class="nav-icon"><i data-icon="pen-line"></i></span> New assessment</a>
+      <a class="nav-item" href="history.html"><span class="nav-icon"><i data-icon="history"></i></span> Past performance</a>
+      <a class="nav-item" href="feedback.html"><span class="nav-icon"><i data-icon="message"></i></span> Feedback</a>
+      <a class="nav-item" href="settings.html"><span class="nav-icon"><i data-icon="settings"></i></span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">?</div>
+        <div><div class="user-name">Loading…</div><div class="user-role">Student</div></div>
+        <span class="logout-btn" title="Clear local data"><i data-icon="power"></i></span>
+      </div>
+      <a href="../index.html" class="switch-role"><i data-icon="repeat" class="ic-sm"></i> Switch role</a>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA: top bar, then the content of this page -->
+  <div class="main-content">
+    <!-- TOP BAR: menu button (phones only), page title, and actions for this page -->
+    <div class="topbar">
+      <button class="hamburger" id="hamburger-btn"><span></span><span></span><span></span></button>
+      <h2>New assessment</h2>
+      <div class="topbar-right">
+        <span id="timer-topbar" class="badge badge-blue hidden"><i data-icon="timer"></i> <span class="t-val">10:00</span></span>
+        <span id="wc-topbar" class="num" style="font-size:13px;color:var(--text2)">0 words</span>
+      </div>
+    </div>
+
+    <!-- PAGE CONTENT: everything specific to this page -->
+    <div class="page-content" style="max-width:860px">
+
+      <!-- Step indicator -->
+      <div style="display:flex;align-items:center;margin-bottom:28px" id="step-indicator">
+        <div class="step-item active" id="si1"><div class="step-circle">1</div><span>Domain</span></div>
+        <div class="step-line" id="sl1"></div>
+        <div class="step-item" id="si2"><div class="step-circle">2</div><span>Topic</span></div>
+        <div class="step-line" id="sl2"></div>
+        <div class="step-item" id="si3"><div class="step-circle">3</div><span>Write</span></div>
+        <div class="step-line" id="sl3"></div>
+        <div class="step-item" id="si4"><div class="step-circle">4</div><span>Submit</span></div>
+      </div>
+
+      <!-- STEP 1: Domain -->
+      <div id="step1" class="card">
+        <h3 style="font-size:16px;margin-bottom:6px">Select your domain</h3>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:20px">
+          Choose a domain and difficulty. The AI backend generates a unique essay topic for you.
+        </p>
+        <div class="domain-grid" id="domain-grid"></div>
+
+        <div class="diff-row">
+          <label for="difficulty-select" style="font-weight:600;color:var(--text)">Difficulty</label>
+          <select id="difficulty-select">
+            <option value="Easy">Easy</option>
+            <option value="Medium" selected>Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+
+        <div style="margin-top:20px;display:flex;justify-content:flex-end">
+          <button class="btn btn-primary" id="step1-next">Generate topic</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Topic -->
+      <div id="step2" class="card hidden">
+        <h3 style="font-size:16px;margin-bottom:4px">Your generated topic</h3>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px">
+          Regenerate as many times as you like. Once you continue, the topic is locked.
+        </p>
+
+        <div id="topic-container">
+          <div class="genai-loading"><div class="ai-orb"></div><p>Generating unique topic…</p></div>
+        </div>
+
+        <div class="callout callout-blue" style="margin-top:16px">
+          <i data-icon="lightbulb"></i> <strong style="color:var(--text)">Tip:</strong>
+          Keep regenerating until you find a topic you're confident writing about.
+        </div>
+        <div class="callout callout-amber" style="margin-top:10px">
+          <i data-icon="timer"></i> <strong style="color:var(--text)">Heads up:</strong>
+          once you accept a topic, the page goes full screen and a <strong style="color:var(--text)">10-minute timer</strong> starts. Full screen stays on until you submit, writing auto-submits when time runs out, copy/paste is disabled, and leaving the tab for more than 15 seconds ends the test.
+        </div>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:20px;flex-wrap:wrap;gap:10px">
+          <button class="btn btn-secondary" id="step2-back"><i data-icon="arrow-left"></i> Change domain</button>
+          <div style="display:flex;gap:10px">
+            <button class="btn btn-secondary" id="regen-btn"><i data-icon="shuffle"></i> Try another</button>
+            <button class="btn btn-primary" id="step2-next">Accept and write</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 3: Write -->
+      <div id="step3" class="card hidden">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:10px;flex-wrap:wrap">
+          <h3 style="font-size:16px">Write your essay</h3>
+          <div style="display:flex;align-items:center;gap:8px">
+            <span id="timer-badge" class="badge badge-blue"><i data-icon="timer"></i> <span class="t-val">10:00</span></span>
+            <span id="wc-badge" class="badge badge-purple num">0 words</span>
+          </div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 16px;margin-bottom:12px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+          <span style="font-size:18px;color:var(--plum)"><i data-icon="pin"></i></span>
+          <div style="flex:1;min-width:180px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:2px">Essay topic (locked)</div>
+            <div id="topic-locked" style="font-weight:600;font-size:14px"></div>
+            <div id="keywords-locked" style="margin-top:6px"></div>
+          </div>
+          <span class="badge badge-green" style="font-size:11px"><i data-icon="lock"></i> Locked</span>
+        </div>
+        <div class="callout callout-blue" style="margin-bottom:12px">
+          <i data-icon="lightbulb"></i> Maximum <strong style="color:var(--text)">300 words</strong>. Length is not scored, so focus on staying on topic and writing clearly.
+          A short introduction, a few well-supported points and a conclusion is enough.
+        </div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:4px">
+          <span>Word count</span><span id="wc-detail" class="num">0 of 300 words maximum</span>
+        </div>
+        <div class="wc-meter" style="margin-bottom:12px">
+          <div class="wc-fill" id="wc-fill" style="width:0%;background:var(--plum)"></div>
+        </div>
+        <div class="callout callout-amber" style="margin-bottom:12px;font-size:12.5px"><i data-icon="shield-check"></i> <strong style="color:var(--text)">Test rules:</strong> copy, cut and paste are disabled. If you leave this tab or window, a <strong style="color:var(--text)">15-second countdown</strong> starts; if you are not back when it ends, the test ends and your essay is submitted as it is.</div>
+        <div class="input-group" style="margin-bottom:12px">
+          <textarea id="essay-input" class="input-field"
+            style="min-height:340px;font-size:15px;line-height:1.85"
+            placeholder="Begin writing your essay here…&#10;&#10;Introduction: State your main argument.&#10;&#10;Body: Support with evidence and examples.&#10;&#10;Conclusion: Summarise your key points."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:16px">
+          <button class="btn btn-secondary" style="padding:6px 12px;font-size:12px" id="clear-btn"><i data-icon="trash"></i> Clear</button>
+          <span class="num" style="margin-left:auto;font-size:12px;color:var(--text3);align-self:center" id="char-count">0 chars</span>
+        </div>
+        <div style="display:flex;justify-content:space-between">
+          <button class="btn btn-secondary" id="step3-back"><i data-icon="arrow-left"></i> Back</button>
+          <button class="btn btn-primary" id="step3-next">Review and submit</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Review & Submit -->
+      <div id="step4" class="card hidden">
+        <h3 style="font-size:16px;margin-bottom:16px">Review before submission</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px">
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Domain</div>
+            <div id="review-domain" style="font-weight:600;font-size:14px"></div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Word count</div>
+            <div id="review-wc" style="font-weight:600;font-size:14px"></div>
+          </div>
+          <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px">
+            <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Status</div>
+            <span class="badge badge-amber">Ready to submit</span>
+          </div>
+        </div>
+        <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px">
+          <div style="font-size:11px;color:var(--text2);margin-bottom:4px">Topic</div>
+          <div id="review-topic" style="font-weight:600;font-size:15px"></div>
+        </div>
+        <div style="margin-bottom:20px">
+          <div style="font-size:13px;color:var(--text2);margin-bottom:8px">Essay preview</div>
+          <div id="review-essay" class="essay-display"></div>
+        </div>
+        <div class="callout callout-blue" style="margin-bottom:20px">
+          <i data-icon="bot"></i> After submission, the AI workflow will evaluate your essay's
+          <strong style="color:var(--text)">semantic, stylistic, and pragmatic</strong> quality.
+        </div>
+
+        <!-- Result (shown after submit) -->
+        <div id="result-area" class="hidden">
+          <div style="background:var(--card2);border:1px solid var(--border2);border-left:3px solid var(--plum);border-radius:var(--radius);padding:22px 24px;margin-bottom:20px">
+            <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">
+              <div style="text-align:center;min-width:80px">
+                <div id="result-score" class="num" style="font-size:52px;font-weight:500;line-height:1">—</div>
+                <div style="font-size:12px;color:var(--text2)">/10</div>
+                <div id="result-label" class="badge" style="margin-top:6px;font-size:11px"></div>
+              </div>
+              <div style="flex:1;min-width:220px">
+                <div style="font-weight:600;font-size:15px;margin-bottom:8px">AI assessment complete</div>
+                <div id="result-feedback" style="font-size:13px;color:var(--text2);line-height:1.7"></div>
+              </div>
+            </div>
+          </div>
+          <div id="result-notices"></div>
+          <div id="score-breakdown" style="margin-bottom:20px"></div>
+          <div class="callout callout-blue" style="margin-bottom:16px"><i data-icon="mail-check"></i> <strong style="color:var(--text)">What happens next:</strong> once an admin reviews your essay, the comparison report (AI vs admin, with charts) is emailed to <b id="report-email" style="color:var(--text)"></b> automatically.</div>
+          <div style="display:flex;gap:10px;flex-wrap:wrap">
+            <a href="history.html" class="btn btn-primary"><i data-icon="history"></i> View in history</a>
+            <button class="btn btn-secondary" id="download-ai-report-btn"><i data-icon="download"></i> Download AI report (PDF)</button>
+            <button class="btn btn-secondary" id="new-assessment-btn"><i data-icon="plus"></i> New assessment</button>
+          </div>
+        </div>
+
+        <div id="submit-area" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <button class="btn btn-secondary" id="step4-back"><i data-icon="arrow-left"></i> Edit essay</button>
+          <button class="btn btn-primary btn-lg" id="submit-btn">
+            <span id="submit-text">Submit for AI scoring</span>
+            <span id="submit-spinner" class="spinner hidden"></span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module" src="new_assessment.js?v=6"></script>
+</body>
+</html>

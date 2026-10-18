@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Feedback — Scuba Analyzer</title>
+  <link rel="icon" type="image/png" href="../assets/favicon-32.png"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <!-- Turns <i data-icon="..."></i> into line icons (see js/icons.js) -->
+  <script type="module" src="../js/icons.js"></script>
+</head>
+<body>
+<!-- Pop-up messages ("toasts") appear here; js/helpers.js adds them -->
+<div id="toast-container"></div>
+<!-- Dark layer behind the sidebar when it is open on a phone -->
+<div class="sidebar-overlay" id="sb-overlay"></div>
+
+<!-- PAGE LAYOUT: sidebar on the left, main area on the right -->
+<div class="app-layout">
+  <!-- SIDEBAR: logo, menu, and the signed-in person. Same on every page; js/sidebar.js fills in the name and role. -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><img src="../assets/logo-mark-light.png" alt=""></div>
+      <div class="logo-text">Scuba Analyzer</div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Student</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i data-icon="dashboard"></i></span> Dashboard</a>
+      <a class="nav-item" href="new_assessment.html"><span class="nav-icon"><i data-icon="pen-line"></i></span> New assessment</a>
+      <a class="nav-item" href="history.html"><span class="nav-icon"><i data-icon="history"></i></span> Past performance</a>
+      <a class="nav-item active" href="feedback.html"><span class="nav-icon"><i data-icon="message"></i></span> Feedback</a>
+      <a class="nav-item" href="settings.html"><span class="nav-icon"><i data-icon="settings"></i></span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">?</div>
+        <div><div class="user-name">Loading…</div><div class="user-role">Student</div></div>
+        <span class="logout-btn" title="Clear local data"><i data-icon="power"></i></span>
+      </div>
+      <a href="../index.html" class="switch-role"><i data-icon="repeat" class="ic-sm"></i> Switch role</a>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA: top bar, then the content of this page -->
+  <div class="main-content">
+    <!-- TOP BAR: menu button (phones only), page title, and actions for this page -->
+    <div class="topbar">
+      <button class="hamburger" id="hamburger-btn"><span></span><span></span><span></span></button>
+      <h2>Feedback</h2>
+    </div>
+
+    <!-- PAGE CONTENT: everything specific to this page -->
+    <div class="page-content" style="max-width:760px">
+
+      <div class="card" style="margin-bottom:24px">
+        <h3 style="font-size:15px;margin-bottom:4px">Share your feedback</h3>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:18px">Tell us what's working, what's confusing, or what you'd like to see next. Visible to admins on their Feedback page.</p>
+
+        <div class="input-group" style="margin-bottom:14px">
+          <label id="rate-lbl">How would you rate Scuba Analyzer so far?</label>
+          <div class="rating-stars" id="rating-stars" style="margin-top:6px">
+            <button type="button" class="star" data-val="1" aria-label="1 star"><i data-icon="star"></i></button>
+            <button type="button" class="star" data-val="2" aria-label="2 stars"><i data-icon="star"></i></button>
+            <button type="button" class="star" data-val="3" aria-label="3 stars"><i data-icon="star"></i></button>
+            <button type="button" class="star" data-val="4" aria-label="4 stars"><i data-icon="star"></i></button>
+            <button type="button" class="star" data-val="5" aria-label="5 stars"><i data-icon="star"></i></button>
+          </div>
+        </div>
+
+        <div class="input-group" style="margin-bottom:14px">
+          <label>Category</label>
+          <select id="category-select" class="input-field">
+            <option>General</option>
+            <option>AI scoring accuracy</option>
+            <option>Topic generation</option>
+            <option>Bug report</option>
+            <option>Feature request</option>
+          </select>
+        </div>
+
+        <div class="input-group" style="margin-bottom:16px">
+          <label>Your message</label>
+          <textarea id="message-input" class="input-field" style="min-height:120px" placeholder="What's on your mind?"></textarea>
+        </div>
+
+        <button class="btn btn-primary" id="submit-feedback-btn">Submit feedback</button>
+      </div>
+
+      <div class="card">
+        <h3 style="font-size:15px;margin-bottom:16px">Your past feedback</h3>
+        <div id="feedback-list" style="display:flex;flex-direction:column;gap:12px"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module" src="feedback.js?v=6"></script>
+</body>
+</html>

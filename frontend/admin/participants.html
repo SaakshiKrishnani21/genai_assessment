@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Participants — Scuba Analyzer</title>
+  <link rel="icon" type="image/png" href="../assets/favicon-32.png"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <!-- Turns <i data-icon="..."></i> into line icons (see js/icons.js) -->
+  <script type="module" src="../js/icons.js"></script>
+  <!-- Chart.js draws the four charts on this page -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <link rel="stylesheet" href="participants.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+<div class="sidebar-overlay" id="sb-overlay"></div>
+
+<div class="app-layout">
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><img src="../assets/logo-mark-light.png" alt=""></div>
+      <div class="logo-text">Scuba Analyzer</div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Admin</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i data-icon="dashboard"></i></span> Dashboard</a>
+      <a class="nav-item active" href="participants.html"><span class="nav-icon"><i data-icon="graduation-cap"></i></span> Participants</a>
+      <a class="nav-item" href="review.html"><span class="nav-icon"><i data-icon="clipboard-check"></i></span> Review center</a>
+      <a class="nav-item" href="feedback.html"><span class="nav-icon"><i data-icon="message"></i></span> Feedback</a>
+      <a class="nav-item" href="settings.html"><span class="nav-icon"><i data-icon="settings"></i></span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">?</div>
+        <div><div class="user-name">Loading…</div><div class="user-role">Admin</div></div>
+        <span class="logout-btn" title="Clear local data"><i data-icon="power"></i></span>
+      </div>
+      <a href="../index.html" class="switch-role"><i data-icon="repeat" class="ic-sm"></i> Switch role</a>
+    </div>
+  </aside>
+
+  <div class="main-content">
+    <div class="topbar">
+      <button class="hamburger" id="hamburger-btn"><span></span><span></span><span></span></button>
+      <h2>Participants dashboard</h2>
+      <div class="topbar-right">
+        <span id="shown-count" style="font-size:13px;color:var(--text2);margin-right:4px"></span>
+        <button class="btn btn-secondary" id="reset-btn" style="padding:8px 14px;font-size:13px"><i data-icon="refresh"></i> Reset filters</button>
+        <button class="btn btn-primary" id="download-btn" style="padding:8px 16px;font-size:13px"><i data-icon="download"></i> <span id="download-text">Download Excel</span></button>
+      </div>
+    </div>
+
+    <div class="page-content">
+      <!-- Active filters (click one to remove it) -->
+      <div class="chips" id="chips"></div>
+
+      <!-- Headline numbers: they follow the filters -->
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-icon"><i data-icon="graduation-cap"></i></div><div class="stat-value" id="k-people">—</div><div class="stat-label">Participants</div></div>
+        <div class="stat-card"><div class="stat-icon"><i data-icon="file-text"></i></div><div class="stat-value" id="k-essays">—</div><div class="stat-label">Submissions</div></div>
+        <div class="stat-card"><div class="stat-icon"><i data-icon="star"></i></div><div class="stat-value" id="k-admin" style="color:var(--plum)">—</div><div class="stat-label">Average admin score</div></div>
+        <div class="stat-card"><div class="stat-icon"><i data-icon="bot"></i></div><div class="stat-value" id="k-ai" style="color:var(--peach-ink)">—</div><div class="stat-label">Average AI score</div></div>
+        <div class="stat-card"><div class="stat-icon"><i data-icon="flag"></i></div><div class="stat-value" id="k-sus" style="color:var(--red)">—</div><div class="stat-label">Suspicious participants</div></div>
+      </div>
+
+      <div class="dash">
+        <!-- The four charts. Click a bar or a donut slice to filter the whole page. -->
+        <div class="charts">
+          <div class="card chart-card">
+            <h3>Average score by domain</h3>
+            <div class="hint">Bars = admin, line = AI. Click a domain to filter.</div>
+            <div class="chart-box"><canvas id="domain-chart"></canvas></div>
+          </div>
+          <div class="card chart-card">
+            <h3>Submissions over time</h3>
+            <div class="hint">Area = essays per day (days with submissions), line = average admin score.</div>
+            <div class="chart-box"><canvas id="time-chart"></canvas></div>
+          </div>
+          <div class="card chart-card">
+            <h3>Participants by feedback</h3>
+            <div class="hint">Click a slice to filter.</div>
+            <div class="chart-box"><canvas id="band-chart"></canvas></div>
+          </div>
+          <div class="card chart-card">
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px;flex-wrap:wrap">
+              <div><h3>Spider graph</h3><div class="hint" id="spider-hint">Everyone shown (average).</div></div>
+              <select id="spider-select" class="input-field" style="width:170px;padding:6px 10px;font-size:12px"></select>
+            </div>
+            <div class="chart-box" style="height:222px"><canvas id="spider-chart"></canvas></div>
+            <div class="legend"><span><b style="background:#ECA087"></b>AI average</span><span><b style="background:#5C3A41"></b>Admin average</span></div>
+          </div>
+        </div>
+
+        <!-- Filters ("slicers"): tick nothing = show everything -->
+        <aside class="slicers">
+          <div class="card slicer">
+            <h4>Period</h4>
+            <select id="period-select" class="input-field" style="padding:7px 10px;font-size:13px">
+              <option value="all">All time</option><option value="7">Last 7 days</option><option value="30">Last 30 days</option>
+            </select>
+          </div>
+          <div class="card slicer" id="slicer-domain"></div>
+          <div class="card slicer" id="slicer-feedback"></div>
+          <div class="card slicer" id="slicer-suspicious"></div>
+          <div class="card slicer" id="slicer-status"></div>
+        </aside>
+      </div>
+
+      <!-- The same participants that go into the Excel file -->
+      <div class="card">
+        <div class="toolbar">
+          <h3 style="font-size:15px;margin-right:auto">Participants <span id="table-count" style="color:var(--text3);font-weight:400"></span></h3>
+          <input type="text" id="search-input" class="input-field" placeholder="Search name or email…" style="width:220px;padding:7px 12px;font-size:13px"/>
+        </div>
+        <div class="p-wrap">
+          <table class="p-table">
+            <thead><tr>
+              <th data-sort="name">Participant name</th>
+              <th data-sort="admin_avg" class="num">Admin avg score</th>
+              <th data-sort="ai_avg" class="num">AI avg score</th>
+              <th data-sort="rating">Feedback <small id="fb-head" style="font-weight:400;color:var(--text3)"></small></th>
+              <th data-sort="suspicious">Suspicious activity</th>
+              <th data-sort="fullscreen_exits" class="num">Full-screen exit attempts</th>
+              <th data-sort="flagged_submissions" class="num">Flagged submissions</th>
+              <th data-sort="submissions" class="num">Submissions</th>
+            </tr></thead>
+            <tbody id="p-body"></tbody>
+          </table>
+        </div>
+        <p style="font-size:12px;color:var(--text3);margin-top:12px">
+          Click a column title to sort, and a row to show that participant on the spider graph.
+          Feedback: below 5 Need improvement · 5–6.9 Good · 7–8.4 Very good · 8.5+ Excellent, taken from the <b id="fb-note"></b> (change in Settings).
+          Suspicious = tried to leave full screen (left it, or pressed Esc) <b id="limit-txt">1</b> time(s) or more (change in Settings).
+          AI averages only count essays you have already reviewed, so pending essays stay blind.
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script type="module" src="participants.js?v=6"></script>
+</body>
+</html>

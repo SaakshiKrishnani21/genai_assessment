@@ -1,0 +1,39 @@
+/* Page layout: charts on the left, filters ("slicers") on the right */
+.dash{display:grid;grid-template-columns:minmax(0,1fr) 230px;gap:20px;align-items:start;margin-bottom:24px}
+.charts{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.charts>*{min-width:0}
+.chart-card h3{font-size:14px;margin-bottom:2px}
+.chart-card .hint{font-size:12px;color:var(--text3);margin-bottom:10px}
+.chart-box{position:relative;height:250px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--text2);justify-content:center;flex-wrap:wrap;margin-top:8px}
+.legend b{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+/* Filters */
+.slicers{position:sticky;top:12px;display:flex;flex-direction:column;gap:14px}
+.slicer h4{font-size:13px;margin-bottom:8px}
+.slicer label{display:flex;gap:8px;align-items:center;font-size:13px;padding:3px 0;cursor:pointer;color:var(--text)}
+.slicer input{accent-color:var(--plum)}
+
+/* The chips under the title: one per active filter (click to remove) */
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px;min-height:30px;align-items:center}
+.chip{background:var(--tint);border:1px solid var(--border2);color:var(--plum);border-radius:999px;padding:3px 10px;font-size:12px;cursor:pointer}
+.chip:hover{background:var(--peach-dim)}
+.chips .none{font-size:12px;color:var(--text3)}
+
+/* Table */
+.p-wrap{overflow-x:auto}
+.p-table th{cursor:pointer;white-space:nowrap;user-select:none}
+.p-table th:hover{color:var(--plum)}
+.p-table td.num,.p-table th.num{text-align:center;font-family:var(--font-mono)}
+.p-table tbody tr{cursor:pointer}
+.p-table tbody tr.sel{background:var(--peach-dim)}
+.p-table tbody tr.sus{box-shadow:inset 3px 0 0 var(--red)}
+.flag-ic{color:var(--red);display:inline-flex;vertical-align:-2px;margin-left:6px}
+.muted-i{color:var(--text3);font-style:italic;font-family:var(--font-body)}
+.toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+
+@media (max-width:1100px){
+  .dash{grid-template-columns:1fr}
+  .slicers{position:static;order:-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+}
+@media (max-width:700px){ .charts{grid-template-columns:1fr} }

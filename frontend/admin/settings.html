@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Admin settings — Scuba Analyzer</title>
+  <link rel="icon" type="image/png" href="../assets/favicon-32.png"/>
+  <link rel="stylesheet" href="../css/style.css"/>
+  <!-- Turns <i data-icon="..."></i> into line icons (see js/icons.js) -->
+  <script type="module" src="../js/icons.js"></script>
+</head>
+<body>
+<!-- Pop-up messages ("toasts") appear here; js/helpers.js adds them -->
+<div id="toast-container"></div>
+<!-- Dark layer behind the sidebar when it is open on a phone -->
+<div class="sidebar-overlay" id="sb-overlay"></div>
+
+<!-- PAGE LAYOUT: sidebar on the left, main area on the right -->
+<div class="app-layout">
+  <!-- SIDEBAR: logo, menu, and the signed-in person. Same on every page; js/sidebar.js fills in the name and role. -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><div class="logo-icon"><img src="../assets/logo-mark-light.png" alt=""></div>
+      <div class="logo-text">Scuba Analyzer</div></div>
+    <nav class="sidebar-nav">
+      <div class="nav-section-label">Admin</div>
+      <a class="nav-item" href="dashboard.html"><span class="nav-icon"><i data-icon="dashboard"></i></span> Dashboard</a>
+      <a class="nav-item" href="participants.html"><span class="nav-icon"><i data-icon="graduation-cap"></i></span> Participants</a>
+      <a class="nav-item" href="review.html"><span class="nav-icon"><i data-icon="clipboard-check"></i></span> Review center</a>
+      <a class="nav-item" href="feedback.html"><span class="nav-icon"><i data-icon="message"></i></span> Feedback</a>
+      <a class="nav-item active" href="settings.html"><span class="nav-icon"><i data-icon="settings"></i></span> Settings</a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-pill">
+        <div class="user-avatar">?</div>
+        <div><div class="user-name">Loading…</div><div class="user-role">Admin</div></div>
+        <span class="logout-btn" title="Clear local data"><i data-icon="power"></i></span>
+      </div>
+      <a href="../index.html" class="switch-role"><i data-icon="repeat" class="ic-sm"></i> Switch role</a>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA: top bar, then the content of this page -->
+  <div class="main-content">
+    <!-- TOP BAR: menu button (phones only), page title, and actions for this page -->
+    <div class="topbar">
+      <button class="hamburger" id="hamburger-btn"><span></span><span></span><span></span></button>
+      <h2>Admin settings</h2>
+    </div>
+
+    <!-- PAGE CONTENT: everything specific to this page -->
+    <div class="page-content" style="max-width:720px">
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>Profile</h3>
+          <div class="settings-row">
+            <div class="settings-label">Display name<small>Shown in the sidebar and as the reviewer on admin reports</small></div>
+            <input type="text" id="name-input" class="input-field" style="width:220px" placeholder="Your name"/>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Email<small>Optional for admins</small></div>
+            <input type="email" id="user-email-input" class="input-field" style="width:220px" placeholder="you@example.com"/>
+          </div>
+          <div class="settings-row" style="border-bottom:none">
+            <button class="btn btn-primary" id="save-name-btn">Save profile</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>Review rules</h3>
+          <div class="settings-row">
+            <div class="settings-label">Low-score threshold<small>Submissions scoring below this are flagged as "Needs attention"</small></div>
+            <input type="number" id="threshold-input" class="input-field" min="0" max="10" style="width:100px"/>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Suspicious activity limit<small>Mark a participant "suspicious" after this many attempts to leave full screen (leaving it, or pressing Esc) during tests</small></div>
+            <input type="number" id="exit-limit-input" class="input-field" min="1" max="20" style="width:100px"/>
+          </div>
+          <div class="settings-row">
+            <div class="settings-label">Feedback is based on<small>Which score gives each participant's Feedback word (Need improvement, Good, Very good, Excellent)</small></div>
+            <select id="feedback-basis-input" class="input-field" style="width:230px">
+              <option value="admin">Admin average</option>
+              <option value="average">Average of AI and admin</option>
+              <option value="lower">Lower of AI and admin</option>
+            </select>
+          </div>
+          <div class="settings-row" style="border-bottom:none">
+            <div class="settings-label">Auto-flag low scores<small>Show the Flagged badge on the review list</small></div>
+            <label class="toggle"><input type="checkbox" id="toggle-autoflag"/><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>Notifications</h3>
+          <div class="settings-row" style="border-bottom:none">
+            <div class="settings-label">Weekly digest<small>Use “Email me this result” on the results screen (sent through n8n)</small></div>
+            <label class="toggle"><input type="checkbox" id="toggle-digest"/><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>Report branding</h3>
+          <div class="settings-row" style="border-bottom:none;flex-direction:column;align-items:stretch;gap:8px">
+            <div class="settings-label">Footer note<small>Printed at the end of every admin and comparison report (e.g. recommendations or a cohort note)</small></div>
+            <textarea id="footer-note" class="input-field" style="min-height:70px" placeholder="e.g. Reviewed as part of the Spring cohort evaluation."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="settings-section" style="margin-bottom:0">
+          <h3>Data</h3>
+          <div class="settings-row" style="border-bottom:none">
+            <div class="settings-label">Shared local submissions<small>Admin and student views read the same browser storage</small></div>
+            <button class="btn btn-danger" id="clear-history-btn"><i data-icon="trash"></i> Clear all submissions</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script type="module" src="settings.js?v=6"></script>
+</body>
+</html>

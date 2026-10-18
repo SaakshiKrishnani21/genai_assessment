@@ -1,0 +1,27 @@
+/* Small page-specific bits (not in the shared stylesheet, same as the original page) */
+.step-item{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:12px;color:var(--text3);transition:color .2s}
+.step-item.active{color:var(--espresso);font-weight:600}.step-item.done{color:var(--green)}
+/* Step indicator at the top (1 Domain, 2 Topic, 3 Write, 4 Submit) */
+.step-circle{width:30px;height:30px;border-radius:50%;background:#fff;border:1.5px solid var(--border2);display:flex;align-items:center;justify-content:center;font:500 13px var(--font-mono);transition:background-color .2s,border-color .2s}
+.step-item.active .step-circle{border-color:var(--plum);background:var(--tint);color:var(--espresso)}
+.step-item.done .step-circle{border-color:var(--plum);background:var(--plum);color:#fff}
+.step-line{flex:1;height:2px;background:var(--border);transition:background .3s;margin:0 4px;margin-bottom:16px}
+.step-line.done{background:var(--green)}
+/* Difficulty picker and keyword chips (step 1 and 2) */
+.diff-row{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:13px;color:var(--text2)}
+.diff-row select{background:#fff;border:1px solid var(--border2);color:var(--text);border-radius:var(--radius-sm);padding:6px 10px;font-size:13px;cursor:pointer}
+.keyword-chip{display:inline-block;background:var(--peach-dim);border:1px solid rgba(236,160,135,.35);color:var(--peach-ink);font:500 12px var(--font-mono);padding:3px 9px;border-radius:4px;margin:3px 4px 0 0}
+/* Countdown timer: turns red in the last 2 minutes and pulses in the last 30 seconds */
+#timer-badge,#timer-topbar{font-family:var(--font-mono);font-variant-numeric:tabular-nums;font-weight:500;transition:color .3s,background .3s}
+#timer-badge.timer-red,#timer-topbar.timer-red{background:rgba(163,42,42,.1)!important;color:var(--red)!important;border-color:rgba(163,42,42,.55)!important}
+#timer-badge.timer-critical,#timer-topbar.timer-critical{animation:timerPulse 1s infinite}
+@keyframes timerPulse{0%,100%{opacity:1}50%{opacity:.45}}
+/* One correction in the result: the original sentence, what was expected, and a better version */
+.correction-card{background:var(--card2);border:1px solid var(--border);border-left:3px solid var(--peach);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:10px}
+.correction-card .c-original{font-size:13px;color:var(--text);font-style:italic;margin-bottom:6px}
+.correction-card .c-row{display:flex;gap:6px;font-size:12.5px;line-height:1.6;margin-bottom:3px}
+.correction-card .c-row .c-tag{flex-shrink:0;font-weight:700;width:78px}
+.correction-card .c-expected .c-tag{color:var(--amber)}
+.correction-card .c-correction .c-tag{color:var(--peach-ink)}
+.correction-card .c-expected span:last-child{color:var(--text2)}
+.correction-card .c-correction span:last-child{color:var(--text);font-family:var(--font-mono);font-size:12.5px;background:var(--peach-dim);padding:0 4px;border-radius:3px}

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Scuba Analyzer — Log in or sign up</title>
+<link rel="icon" type="image/png" href="assets/favicon-32.png"/>
+<link rel="stylesheet" href="css/style.css"/>
+<script type="module" src="js/icons.js"></script>
+<link rel="stylesheet" href="index.css"/>
+</head>
+<body>
+<div id="toast-container"></div>
+<!-- Page layout: brand panel on the left, log in form on the right -->
+<div class="lp">
+  <!-- LEFT: logo, headline and a sample comparison report (decoration only) -->
+  <section class="lp-hero">
+    <div>
+      <img class="hero-logo" src="assets/logo-light.png" alt="Scuba Analyzer"/>
+    </div>
+    <div>
+      <h1>Essay assessment with AI scoring and expert review</h1>
+      <p class="lead">Generate a topic, write your essay, and receive a three-dimension AI evaluation. Then see how it compares with your reviewer's score, with charts, in a downloadable report.</p>
+    </div>
+    <div class="sample" aria-label="Sample comparison report">
+      <div class="sample-head"><h4>Sample comparison report</h4><span class="badge badge-green"><i data-icon="circle-check"></i> Close agreement</span></div>
+      <div class="srow"><div class="l"><span>AI score</span><b>7.8</b></div><div class="track"><div class="fill f-ai" data-w="78"></div></div></div>
+      <div class="srow"><div class="l"><span>Admin score</span><b>8.4</b></div><div class="track"><div class="fill f-ad" data-w="84"></div></div></div>
+      <div class="srow"><div class="l"><span>Semantic, stylistic, pragmatic</span><b>8 / 7 / 8</b></div><div class="track"><div class="fill f-s" data-w="77"></div></div></div>
+      <div class="facts"><div><b>3</b><span>AI dimensions</span></div><div><b>2</b><span>Scorers compared</span></div><div><b>PDF</b><span>Charts included</span></div></div>
+    </div>
+  </section>
+
+  <!-- RIGHT: the form. The script at the bottom decides which part is shown. -->
+  <section class="lp-form">
+    <div class="box">
+      <img class="form-logo" src="assets/logo-dark.png" alt="Scuba Analyzer"/>
+      <h2 id="h-title">Welcome back</h2>
+      <p class="sub" id="h-sub">Log in to continue your assessments.</p>
+
+      <!-- Firebase mode: log in / sign up form (hidden until the script shows it) -->
+      <div id="fb-area" class="hidden">
+        <div class="seg" role="tablist"><button id="t-login" class="on" role="tab">Log in</button><button id="t-signup" role="tab">Sign up</button></div>
+        <div id="auth-card">
+          <button class="gbtn" id="g-btn"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.1 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.4c-.5 2.9-2.2 5.3-4.6 6.9l7.4 5.7c4.3-4 6.9-9.9 6.9-17.1z"/><path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.4-5.7c-2.1 1.4-4.9 2.3-8.5 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg><span id="g-lbl">Continue with Google</span></button>
+          <div class="or">or use email</div>
+          <div class="fld hidden" id="f-name"><label for="in-name">Full name</label><input class="input-field" id="in-name" placeholder="Aditi Sharma" autocomplete="name"/></div>
+          <div class="fld"><label for="in-email">Email</label><input class="input-field" id="in-email" type="email" placeholder="you@example.com" autocomplete="email"/></div>
+          <div class="fld"><label for="in-pass">Password</label><div class="pw"><input class="input-field" id="in-pass" type="password" placeholder="At least 6 characters" autocomplete="current-password"/><button type="button" id="eye">Show</button></div></div>
+          <div class="row" id="forgot-row"><button class="link" id="forgot">Forgot password?</button></div>
+          <button class="btn btn-primary btn-full btn-lg" id="go">Log in</button>
+          <p class="note">Everyone who joins is a <b>student</b>. Admin access is granted separately by the project owner. Email accounts must be verified before first login.</p>
+        </div>
+        <!-- "Check your inbox" message, shown after sign-up -->
+        <div class="ok" id="ok-card"><div class="ic-lg"><i data-icon="mail-check"></i></div><h3>Check your inbox</h3><p id="ok-msg"></p><p id="ok-hint" style="font-size:12.5px;margin-top:10px;color:var(--text3)"></p>
+        <div class="actions"><button class="btn btn-primary" id="ok-resend">Resend email</button><button class="btn btn-secondary" id="ok-back"><i data-icon="arrow-left"></i> Back to log in</button></div></div>
+      </div>
+
+      <!-- Local mode: no accounts, just pick a role -->
+      <div id="local-area" class="hidden">
+        <div class="fld"><label for="l-name">Display name</label><input class="input-field" id="l-name" placeholder="Aditi Sharma"/></div>
+        <div class="fld"><label for="l-email">Email</label><input class="input-field" id="l-email" type="email" placeholder="you@example.com"/></div>
+        <div class="role-grid"><button class="btn btn-primary btn-lg" id="l-student"><i data-icon="graduation-cap"></i> Student</button><button class="btn btn-secondary btn-lg" id="l-admin"><i data-icon="shield-check"></i> Admin</button></div>
+        <p class="note">Local mode: no account needed. Data stays in this browser.</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script type="module" src="index.js?v=6"></script>
+</body>
+</html>
